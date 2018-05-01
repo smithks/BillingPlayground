@@ -2,5 +2,7 @@
     <string name="app_name">BillingPlayground</string>
     <string name="billing_library_test">Billing Library</string>
     <string name="billing_api_test">Billing Api</string>
+    <string name="check_managed_products">Check Managed Products</string>
+    <string name="check_subscription_products">Check Subscription Products</string>
 
 </resources>

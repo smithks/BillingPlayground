@@ -18,14 +18,14 @@ class MainActivity : AppCompatActivity() {
                     title = getString(R.string.billing_library_test)
                     val billingLibraryFragment = BillingLibraryFragment()
                     val fragmentTransaction = supportFragmentManager.beginTransaction()
-                    fragmentTransaction.replace(R.id.main_parent_layout, billingLibraryFragment, "Library")
+                    fragmentTransaction.replace(R.id.fragment_container, billingLibraryFragment, "Library")
                     fragmentTransaction.commit()
                 }
                 R.id.menu_billing_api_tab -> {
                     title = getString(R.string.billing_api_test)
                     val billingApiFragment = BillingAPIFragment()
                     val fragmentTransaction = supportFragmentManager.beginTransaction()
-                    fragmentTransaction.replace(R.id.main_parent_layout, billingApiFragment, "API")
+                    fragmentTransaction.replace(R.id.fragment_container, billingApiFragment, "API")
                     fragmentTransaction.commit()
                 }
             }
