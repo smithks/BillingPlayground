@@ -3,6 +3,8 @@ package com.smithkeegan.billingplayground
 import android.annotation.SuppressLint
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import com.smithkeegan.billingplayground.billingApi.BillingAPIFragment
+import com.smithkeegan.billingplayground.billingLibrary.BillingLibraryFragment
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
