@@ -13,12 +13,13 @@ import javax.inject.Singleton
 @Singleton
 class BillingLibraryClient @Inject constructor(context: Context) : BillingClientStateListener, PurchasesUpdatedListener {
 
-    private val billingClient: BillingClient = BillingClient.newBuilder(context).setListener(this).build()
-    var libraryListener : BillingLibraryListener? = null
-    var serviceConnected : Boolean = false
-    var pendingRunnable : Runnable? = null
+    var libraryListener: BillingLibraryListener? = null
+    var serviceConnected: Boolean = false
+    var pendingRunnable: Runnable? = null
 
-    fun connect() = billingClient.startConnection(this)
+    private val billingClient: BillingClient = BillingClient.newBuilder(context).setListener(this).build()
+
+    private fun connect() = billingClient.startConnection(this)
 
     fun disconnect() = billingClient.endConnection()
 
@@ -29,17 +30,16 @@ class BillingLibraryClient @Inject constructor(context: Context) : BillingClient
     val managedSku = "playgroundmanaged1"
     val subscriptionSku = "playgroundsubscription1"
 
-    fun processRequest(){
+    fun processRequest() {
         if (serviceConnected) {
             pendingRunnable?.run()
             pendingRunnable = null
-        }
-        else {
+        } else {
             connect()
         }
     }
 
-    fun checkProducts(productType : String) {
+    fun checkProducts(productType: String) {
         val runnable = Runnable {
             val paramsBuilder = SkuDetailsParams.newBuilder()
             paramsBuilder.setSkusList(if (productType == SkuType.INAPP) arrayListOf(managedSku) else arrayListOf(subscriptionSku)).setType(productType)
@@ -49,18 +49,42 @@ class BillingLibraryClient @Inject constructor(context: Context) : BillingClient
         processRequest()
     }
 
-    fun purchaseProduct(activity: Activity, productType: String) {
-            val runnable = Runnable {
-                if (billingClient.isFeatureSupported(BillingClient.FeatureType.SUBSCRIPTIONS) == BillingClient.BillingResponse.OK) {
-                    val params = BillingFlowParams.newBuilder()
-                            .setSku(if (productType == SkuType.INAPP) managedSku else subscriptionSku)
-                            .setType(productType)
-                            .build()
-                    billingClient.launchBillingFlow(activity, params)
+    fun checkPurchaseHistory(){
+        billingClient.queryPurchaseHistoryAsync(SkuType.INAPP, object: PurchaseHistoryResponseListener {
+            override fun onPurchaseHistoryResponse(responseCode: Int, purchasesList: MutableList<Purchase>?) {
+                if (responseCode == BillingClient.BillingResponse.OK){
+                    for (purchase in purchasesList.orEmpty()){
+                        //Handle result
+                    }
                 }
             }
-            pendingRunnable = runnable
-            processRequest()
+
+        })
+    }
+
+    fun consumeProduct(purchaseToken: String){
+
+        billingClient.consumeAsync(purchaseToken, object: ConsumeResponseListener {
+            override fun onConsumeResponse(responseCode: Int, purchaseToken: String?) {
+                if (responseCode == BillingClient.BillingResponse.OK){
+                    //Provision consumed purchase
+                }
+            }
+        })
+    }
+
+    fun purchaseProduct(activity: Activity, productType: String) {
+        val runnable = Runnable {
+            if (billingClient.isFeatureSupported(BillingClient.FeatureType.SUBSCRIPTIONS) == BillingClient.BillingResponse.OK) {
+                val params = BillingFlowParams.newBuilder()
+                        .setSku(if (productType == SkuType.INAPP) managedSku else subscriptionSku)
+                        .setType(productType)
+                        .build()
+                billingClient.launchBillingFlow(activity, params)
+            }
+        }
+        pendingRunnable = runnable
+        processRequest()
     }
 
     override fun onPurchasesUpdated(responseCode: Int, purchases: MutableList<Purchase>?) {
@@ -69,11 +93,12 @@ class BillingLibraryClient @Inject constructor(context: Context) : BillingClient
 
 
     override fun onBillingServiceDisconnected() {
+        serviceConnected = false
         libraryListener?.onBillingDisconnected()
     }
 
     override fun onBillingSetupFinished(responseCode: Int) {
-        if (responseCode == BillingClient.BillingResponse.OK){
+        if (responseCode == BillingClient.BillingResponse.OK) {
             serviceConnected = true
             pendingRunnable?.run()
             pendingRunnable = null
